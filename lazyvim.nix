@@ -35,7 +35,7 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "LazyVim";
     repo = "LazyVim";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Replace with the actual hash
+    hash = "sha256-ZGJ7mxey+D28JlSkpTjwshDD+/tUXHPu+ARZaJg3v4Q=";
   };
 
   # If no patches are needed, you can leave this empty
@@ -65,34 +65,34 @@ stdenv.mkDerivation (finalAttrs: {
     unzip
   ];
 
-  buildPhase = ''
-    runHook preBuild
-    # Create the directory to hold LazyVim's files
-    mkdir -p share/lazyvim
-    # Copy necessary files to share/lazyvim
-    cp init.lua health.lua types.lua share/lazyvim/
-    cp -r lua config plugins util share/lazyvim/
-    # Create the bin directory and the launcher script
-    mkdir bin
-    cat > bin/lazyvim <<'EOF'
-#!/usr/bin/env bash
-# Copy the configuration to the user's config directory if it doesn't exist
-if [ ! -d "$HOME/.config/lazyvim" ]; then
-  mkdir -p "$HOME/.config/lazyvim"
-  cp -r "@lazyvim_share_dir@"/* "$HOME/.config/lazyvim/"
-fi
-# Set NVIM_APPNAME to use the lazyvim configuration directory
-export NVIM_APPNAME="lazyvim"
-# Launch Neovim
-exec nvim "$@"
-EOF
-    chmod +x bin/lazyvim
-    # Substitute the placeholder with the actual path to share/lazyvim
-    substituteInPlace bin/lazyvim \
-      --replace "@lazyvim_share_dir@" "$out/share/lazyvim" \
-      --replace nvim ${neovim}/bin/nvim
-    runHook postBuild
-  '';
+buildPhase = ''
+  runHook preBuild
+  # Create the directory to hold LazyVim's files
+  mkdir -p share/lazyvim
+  # Copy the entire lua directory to share/lazyvim
+  cp -r lua share/lazyvim/
+  # Create the bin directory and the launcher script
+  mkdir bin
+  cat > bin/lazyvim <<'EOF'
+  #!/usr/bin/env bash
+  # Copy the configuration to the user's config directory if it doesn't exist
+  if [ ! -d "$HOME/.config/lazyvim" ]; then
+    mkdir -p "$HOME/.config/lazyvim"
+    cp -r "@lazyvim_share_dir@"/* "$HOME/.config/lazyvim/"
+  fi
+  # Set NVIM_APPNAME to use the lazyvim configuration directory
+  export NVIM_APPNAME="lazyvim"
+  # Launch Neovim
+  exec nvim "$@"
+  EOF
+  chmod +x bin/lazyvim
+  # Substitute the placeholder with the actual path to share/lazyvim
+  substituteInPlace bin/lazyvim \
+    --replace "@lazyvim_share_dir@" "$out/share/lazyvim" \
+    --replace nvim ${neovim}/bin/nvim
+  runHook postBuild
+'';
+ 
 
   installPhase = ''
     runHook preInstall
